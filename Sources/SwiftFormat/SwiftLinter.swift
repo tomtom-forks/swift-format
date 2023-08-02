@@ -151,7 +151,7 @@ public final class SwiftLinter {
       node: Syntax(syntax),
       printTokenStream: debugOptions.contains(.dumpTokenStream),
       whitespaceOnly: true,
-      collectionShouldHaveTrailingComma: true)
+      shouldValidateTrailingComma: false)
     let formatted = printer.prettyPrint()
   }
 }

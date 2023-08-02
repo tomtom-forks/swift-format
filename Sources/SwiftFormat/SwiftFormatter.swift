@@ -163,7 +163,7 @@ public final class SwiftFormatter {
       node: transformedSyntax,
       printTokenStream: debugOptions.contains(.dumpTokenStream),
       whitespaceOnly: false,
-      collectionShouldHaveTrailingComma: true)
+      shouldValidateTrailingComma: false)
     outputStream.write(printer.prettyPrint())
   }
 }

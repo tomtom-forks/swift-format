@@ -68,7 +68,7 @@ public class PrettyPrinter {
   private let maxLineLength: Int
   private var tokens: [Token]
   private var outputBuffer: String = ""
-  private let collectionShouldHaveTrailingComma: Bool
+  private let shouldValidateTrailingComma: Bool
 
   /// The number of spaces remaining on the current line.
   private var spaceRemaining: Int
@@ -174,7 +174,7 @@ public class PrettyPrinter {
   ///   - printTokenStream: Indicates whether debug information about the token stream should be
   ///     printed to standard output.
   ///   - whitespaceOnly: Whether only whitespace changes should be made.
-  public init(context: Context, node: Syntax, printTokenStream: Bool, whitespaceOnly: Bool, collectionShouldHaveTrailingComma: Bool) {
+  public init(context: Context, node: Syntax, printTokenStream: Bool, whitespaceOnly: Bool, shouldValidateTrailingComma: Bool) {
     self.context = context
     let configuration = context.configuration
     self.tokens = node.makeTokenStream(
@@ -183,7 +183,7 @@ public class PrettyPrinter {
     self.spaceRemaining = self.maxLineLength
     self.printTokenStream = printTokenStream
     self.whitespaceOnly = whitespaceOnly
-    self.collectionShouldHaveTrailingComma = collectionShouldHaveTrailingComma
+    self.shouldValidateTrailingComma = shouldValidateTrailingComma
   }
 
   /// Append the given string to the output buffer.
@@ -559,12 +559,16 @@ public class PrettyPrinter {
       // types) from a literal (where the elements are the contents of a collection instance).
       // We never want to add a trailing comma in an initializer so we disable trailing commas on
       // single element collections.
-      let shouldHaveTrailingComma =
-        startLineNumber != openCloseBreakCompensatingLineNumber && (!isSingleElement || self.collectionShouldHaveTrailingComma)
-      if shouldHaveTrailingComma && !hasTrailingComma {
-        diagnose(.addTrailingComma, category: .trailingComma)
-      } else if !shouldHaveTrailingComma && hasTrailingComma {
-        diagnose(.removeTrailingComma, category: .trailingComma)
+      // Added option to not validate trailing comma.
+      if shouldValidateTrailingComma {
+        let shouldHaveTrailingComma =
+          startLineNumber != openCloseBreakCompensatingLineNumber && !isSingleElement
+        if shouldHaveTrailingComma && !hasTrailingComma {
+          diagnose(.addTrailingComma, category: .trailingComma)
+        } else if !shouldHaveTrailingComma && hasTrailingComma {
+          print("warning: startLineNumber: \(startLineNumber) != openCloseBreakCompensatingLineNumber: \(openCloseBreakCompensatingLineNumber) && !\(isSingleElement)")
+          diagnose(.removeTrailingComma, category: .trailingComma)
+        }
       }
 
       let shouldWriteComma = whitespaceOnly ? hasTrailingComma : shouldHaveTrailingComma
